@@ -7,13 +7,12 @@
 #include <arpa/inet.h> // Para inet_ntoa
 #include <openssl/md5.h> // Para MD5_DIGEST_LENGTH
 
-#include "hashMd5.h" // calcularHashMd5 (não precisamos mais de salvar/conferir no servidor)
+#include "hashMd5.h" // calcularHashMd5 
 
 
 #define SERVER_PORT 8081      // Porta para escutar
 #define BUFFER_SIZE 4096      // Tamanho do bloco (4KB)
 #define MAX_FILENAME_SIZE 256 // Tamanho máximo do nome do arquivo
-// #define HASH_FILENAME "hashMd5.txt" // Não precisamos mais salvar em arquivo no servidor
 
 
 int main() {
@@ -35,7 +34,7 @@ int main() {
 
     // Configurar endereço do servidor
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY; // Aceitar conexões de qualquer IP
+    server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(SERVER_PORT);
 
     // Bind
@@ -78,12 +77,9 @@ int main() {
         fp = fopen(filename, "rb");
         if (fp == NULL) {
             perror("Erro ao abrir arquivo solicitado para cálculo do hash");
-            // Informar o cliente sobre o erro? (Opcional, mas bom)
-            // Ex: send(client_sock, "ERRO: Arquivo não encontrado", 26, 0);
             close(client_sock);
-            continue;
         }
-        fclose(fp); // Fecha o arquivo, calcularHashMd5 vai reabrir
+        fclose(fp); 
 
         // Calcular o hash MD5 do arquivo
         calcularHashMd5(filename, hash_buffer);
@@ -99,20 +95,11 @@ int main() {
         }
         if (bytes_sent < MD5_DIGEST_LENGTH) {
              fprintf(stderr, "Aviso: Nem todos os bytes do hash foram enviados.\n");
-             // Idealmente, tratar esse caso reenviando ou abortando
-             close(client_sock);
-             continue;
         }
          printf("Hash MD5 enviado com sucesso.\n");
 
         // --- Etapa 3: Abrir e enviar o arquivo original ---
         fp = fopen(filename, "rb"); // Reabre o arquivo para leitura
-        if (fp == NULL) {
-            // Isso não deveria acontecer se o cálculo do hash funcionou, mas por segurança:
-            perror("Erro ao reabrir arquivo solicitado para envio");
-            close(client_sock);
-            continue;
-        }
 
         // Ler arquivo em blocos e enviar ao cliente
         printf("Enviando arquivo '%s'...\n", filename);
@@ -128,7 +115,6 @@ int main() {
                  fprintf(stderr, "Aviso: Nem todos os bytes do arquivo foram enviados na última operação send().\n");
                  // Poderia adicionar lógica para reenviar o restante
             }
-            // memset(file_buffer, 0, BUFFER_SIZE); // Limpar buffer (opcional aqui, pois fread sobrescreve)
         }
 
         if (ferror(fp)) {
