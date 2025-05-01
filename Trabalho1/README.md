@@ -10,15 +10,35 @@ Este projeto implementa uma aplicação cliente-servidor em C que realiza transf
 ## Requisitos 
 * Compilador GCC
 * Sistema operacional Linux
-* Biblioteca para cálculo de hash (ex: OpenSSL para MD5)
 
-## Estrutura do projeto
 
-## Compilação
+## HashMD5
+Explicar as funcoes dentro do hashMd5.c
 
-```
-make run
-```
+
+## Compilação e limpeza
+    make TCP
+ou
+  
+    make UDP
+
+para limpar arquivos gerados pela execução
+    
+    make clean
+## Execução
+
+Abra dois terminais, um vai ser o server e o outro o cliente 
+### Server:
+    ./tcpServer
+ou
+    
+    ./udpServer
+
+### Cliente:
+    ./tcpCliente
+ou
+
+    ./udpCliente
 
 ## Autores 
 Gabriel da Silva Souza \
