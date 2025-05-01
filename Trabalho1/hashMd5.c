@@ -53,15 +53,7 @@ int conferirHashMd5(const char *arquivoHash, const char *nomeArquivo){
     fclose(arquivo);
 
     // Comparar os hashes
-    printf("Hash calculado: ");
-    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-        printf("%02x", hashCalculado[i]);
-    }
-    printf("\nHash lido: ");    
-    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
-        printf("%02x", hashLido[i]);
-    }
-    printf("\n");
+
     if (memcmp(hashCalculado, hashLido, MD5_DIGEST_LENGTH) == 0) {
         return 1; // Hashs iguais
     } else {
