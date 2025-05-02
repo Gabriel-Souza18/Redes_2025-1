@@ -1,3 +1,17 @@
 
 .vscode/c_cpp_properties.json
 *.json
+
+# Objetos compilados
+*.o
+
+# Binários gerados
+tcpCliente
+tcpServer
+udpCliente
+udpServer
+
+# Diretório de arquivos recebidos
+Recebidos/
+
+
