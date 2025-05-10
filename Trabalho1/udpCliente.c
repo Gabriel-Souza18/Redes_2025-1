@@ -9,6 +9,9 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <openssl/md5.h>
+#include "hashMd5.h"
+#include <openssl/evp.h>
+
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
@@ -114,12 +117,23 @@ int main(int argc, char *argv[]) {
     printf("Taxa de download: %.2f KB/s\n", taxa);
     printf("Tempo total: %lld ms (%.2fs)\n", tempo_ms, tempo_s);
 
-    if (perdidos == 0) {
-        printf("Verificando integridade via MD5...\n");
-        // Chame aqui sua função `conferirHashMd5` se quiser integrar o hash
-    } else {
-        printf("Integridade não verificada: houve perdas.\n");
-    }
+	// Calcular o hash MD5 do arquivo recebido
+	unsigned char hashCalculado[EVP_MAX_MD_SIZE];
+	calcularHashMd5(filepath, hashCalculado);
+
+	// Salvar o hash calculado para posterior comparação
+	salvarHashMd5(HASH_FILENAME, hashCalculado);
+
+	// Conferir a integridade do arquivo recebendo o hash
+	if (perdidos == 0) {
+		if (conferirHashMd5(HASH_FILENAME, filepath)) {
+			printf("Integridade verificada: o arquivo está correto.\n");
+		} else {
+			printf("Integridade falhou: o arquivo está corrompido.\n");
+		}
+	} else {
+		printf("Integridade não verificada: houve perdas.\n");
+	}
 
     return 0;
 }
