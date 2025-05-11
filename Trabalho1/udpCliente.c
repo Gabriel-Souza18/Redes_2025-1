@@ -168,13 +168,19 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
     ssize_t bytes_recebidos;
     int total_recebidos = 0;
 
+    char *dados_recebidos[MAX_PACKETS] = {0};
+    uint32_t tamanhos_recebidos[MAX_PACKETS] = {0};
+
     while (1) {
         bytes_recebidos = recvfrom(sock, &pacote, sizeof(pacote), 0,
-                                (struct sockaddr *)server_addr, &addr_len);
+                                   (struct sockaddr *)server_addr, &addr_len);
 
         if (bytes_recebidos < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 printf("Timeout atingido! Pacote final foi perdido! \n");
+                break;
+            } else {
+                perror("Erro no recvfrom");
                 break;
             }
         }
@@ -186,19 +192,33 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
 
         if (pacote.numero_pacote >= MAX_PACKETS) continue;
 
-        fseek(fp, pacote.numero_pacote * (BUFFER_SIZE - 8), SEEK_SET);
-        fwrite(pacote.dados, 1, pacote.tamanho_dados, fp);
-
         if (!recebido[pacote.numero_pacote]) {
+            dados_recebidos[pacote.numero_pacote] = malloc(pacote.tamanho_dados);
+            if (!dados_recebidos[pacote.numero_pacote]) {
+                fprintf(stderr, "Erro de alocação\n");
+                break;
+            }
+            memcpy(dados_recebidos[pacote.numero_pacote], pacote.dados, pacote.tamanho_dados);
+            tamanhos_recebidos[pacote.numero_pacote] = pacote.tamanho_dados;
             recebido[pacote.numero_pacote] = 1;
             total_recebidos++;
+
             if (pacote.numero_pacote > *maior_pacote)
                 *maior_pacote = pacote.numero_pacote;
         }
     }
 
+    // Escrever em disco em ordem
+    for (int i = 0; i <= *maior_pacote; ++i) {
+        if (recebido[i]) {
+            fwrite(dados_recebidos[i], 1, tamanhos_recebidos[i], fp);
+            free(dados_recebidos[i]);
+        }
+    }
+
     return total_recebidos;
 }
+
 
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath, const char *hash_filepath) {
     long long tempo_ns = (fim.tv_sec - inicio.tv_sec) * 1000000000LL + (fim.tv_nsec - inicio.tv_nsec);
