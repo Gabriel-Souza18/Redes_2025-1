@@ -64,9 +64,7 @@ int main(int argc, char *argv[]) {
 
 
     // --- Extrair o nome base do arquivo solicitado ---
-    // basename() pode modificar o argumento, então fazemos uma cópia se necessário
-    // ou usamos diretamente argv[1] se a implementação não modificar (comum no Linux)
-    char *base_name = basename(argv[1]); // Extrai "100b.txt" de "Arquivos/100b.txt"
+   char *base_name = basename(argv[1]); // Extrai "100b.txt" de "Arquivos/100b.txt"
 
     // Criar nome base do arquivo para salvar localmente usando o nome base extraído
     snprintf(save_filename_base, sizeof(save_filename_base), "%s%s", SAVE_FILENAME_PREFIX, base_name);
@@ -159,15 +157,17 @@ int main(int argc, char *argv[]) {
     // Receber dados do servidor em blocos e escrever no arquivo
     printf("Recebendo arquivo principal...\n");
     memset(buffer, 0, BUFFER_SIZE); // Limpar buffer principal
+    size_t total_file_bytes_received = 0; // Para acumular o tamanho do arquivo principal
     while ((bytes_received = recv(sock, buffer, BUFFER_SIZE, 0)) > 0) {
         // Escrever bloco recebido no arquivo
         if (fwrite(buffer, 1, bytes_received, fp_save) < bytes_received) {
-             perror("Erro ao escrever dados no arquivo local");
-             fclose(fp_save);
-             remove(save_filepath); // Usa o caminho completo
-             close(sock);
-             exit(EXIT_FAILURE);
+            perror("Erro ao escrever dados no arquivo local");
+            fclose(fp_save);
+            remove(save_filepath); // Usa o caminho completo
+            close(sock);
+            exit(EXIT_FAILURE);
         }
+        total_file_bytes_received += bytes_received; // Acumula os bytes do arquivo
     }
 
     if (bytes_received < 0) {
@@ -175,25 +175,40 @@ int main(int argc, char *argv[]) {
         // Arquivo pode estar incompleto
         fclose(fp_save);
         remove(save_filepath); // Usa o caminho completo
-        close(sock);
+        close(sock); // Adicionado para fechar o socket em caso de erro
         exit(EXIT_FAILURE);
     } else {
-        printf("Arquivo '%s' recebido com sucesso.\n", save_filepath);
+        printf("Arquivo '%s' recebido com sucesso (%zu bytes).\n", save_filepath, total_file_bytes_received);
     }
     fclose(fp_save); // Fecha o arquivo principal
 
     //calcula tempo total de execução
     if (clock_gettime(CLOCK_MONOTONIC, &tempoFinal_ts) == -1) {
         perror("Erro ao obter tempo final");
-   }
-       // Calcular a diferença de tempo em milissegundos
+        // Considerar tratamento de erro, como não calcular a velocidade
+    }
+        // Calcular a diferença de tempo em milissegundos
     long long diff_sec = tempoFinal_ts.tv_sec - tempoInicial_ts.tv_sec;
     long long diff_nsec = tempoFinal_ts.tv_nsec - tempoInicial_ts.tv_nsec;
 
     long long tempoTotal_ns =  (diff_sec * 1000000000LL) + diff_nsec;
 
-    printf("Tempo total de execução: %lld ns\n", tempoTotal_ns);
+    printf("Tempo total para obter o arquivo (incluindo hash): %lld ns\n", tempoTotal_ns);
 
+    // --- Calcular e imprimir velocidade de download ---
+    if (total_file_bytes_received > 0 && tempoTotal_ns > 0) {
+        double tempo_s = (double)tempoTotal_ns / 1.0e9; // Tempo total em segundos
+        // Velocidade = (Total de Bytes / 1024 para KB) / Tempo em Segundos
+        double velocidade_kBps = (double)total_file_bytes_received / 1024.0 / tempo_s;
+        // Velocidade = (Total de Bytes / (1024*1024) para MB) / Tempo em Segundos
+        double velocidade_MBps = (double)total_file_bytes_received / (1024.0 * 1024.0) / tempo_s;
+
+        printf("Velocidade de download: %.2f KB/s (%.2f MB/s)\n", velocidade_kBps, velocidade_MBps);
+    } else if (total_file_bytes_received == 0) {
+        printf("Nenhum dado de arquivo recebido, não é possível calcular a velocidade.\n");
+    } else { // tempoTotal_ns <= 0
+        printf("Tempo de download inválido ou zero, não é possível calcular a velocidade.\n");
+    }
     // --- Etapa 3: Conferir hash MD5 do arquivo recebido ---
     printf("Conferindo hash MD5...\n");
     // Usa os caminhos completos para conferir o hash

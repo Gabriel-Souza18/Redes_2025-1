@@ -136,19 +136,23 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
 }
 
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath) {
-    long long tempo_ns = (fim.tv_sec - inicio.tv_sec) * 1e9 + (fim.tv_nsec - inicio.tv_nsec);
-    double tempo_s = tempo_ns / 1e9;
-    long long tempo_ms = tempo_ns / 1000000;
+    long long tempo_ns = (fim.tv_sec - inicio.tv_sec) * 1000000000LL + (fim.tv_nsec - inicio.tv_nsec); // Correção para LL e cálculo direto
+    double tempo_s = (double)tempo_ns / 1.0e9;
+    long long tempo_ms = tempo_ns / 1000000LL;
 
     int total_esperado = maior_pacote + 1;
     int perdidos = total_esperado - total_recebidos;
-    double taxa = (double)total_recebidos * (BUFFER_SIZE - 8) / tempo_s / 1024;
+    double taxa_kBps = 0.0;
+    if (tempo_s > 0) { // Evitar divisão por zero se o tempo for muito pequeno
+        taxa_kBps = (double)total_recebidos * (BUFFER_SIZE - 8) / tempo_s / 1024.0;
+    }
+
 
     printf("Total esperado: %d pacotes\n", total_esperado);
     printf("Total recebido: %d pacotes\n", total_recebidos);
     printf("Perdidos: %d pacotes\n", perdidos);
-    printf("Taxa de download: %.2f KB/s\n", taxa);
-    printf("Tempo total: %lld ms (%.2fs)\n", tempo_ms, tempo_s);
+    printf("Taxa de download: %.2f KB/s\n", taxa_kBps);
+    printf("Tempo total: %lld ns (%lld ms, %.2fs)\n", tempo_ns, tempo_ms, tempo_s); // Adicionado %lld ns
 
     // Calcular hash
     unsigned char hashCalculado[EVP_MAX_MD_SIZE];
