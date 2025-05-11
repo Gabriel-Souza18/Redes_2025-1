@@ -69,10 +69,11 @@ int main(int argc, char *argv[]) {
     struct timeval timeout = {5, 0};
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
+    clock_gettime(CLOCK_MONOTONIC, &inicio);
+
     enviarSolicitacao(sock, nome_arquivo, &server_addr);
     receberHashMd5(sock, hash_filepath, &server_addr);
 
-    clock_gettime(CLOCK_MONOTONIC, &inicio);
     total_recebidos = receberPacotes(sock, fp, &server_addr, recebido, &maior_pacote);
     clock_gettime(CLOCK_MONOTONIC, &fim);
 
@@ -168,8 +169,11 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
     ssize_t bytes_recebidos;
     int total_recebidos = 0;
 
-    char *dados_recebidos[MAX_PACKETS] = {0};
-    uint32_t tamanhos_recebidos[MAX_PACKETS] = {0};
+    char *buffer_total = malloc(MAX_PACKETS * (BUFFER_SIZE - 8)); 
+    if (!buffer_total) {
+        perror("Erro ao alocar memória para o buffer total");
+        return -1;
+    }
 
     while (1) {
         bytes_recebidos = recvfrom(sock, &pacote, sizeof(pacote), 0,
@@ -177,7 +181,7 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
 
         if (bytes_recebidos < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                printf("Timeout atingido! Pacote final foi perdido! \n");
+                printf("Timeout atingido! Pacote final foi perdido!\n");
                 break;
             } else {
                 perror("Erro no recvfrom");
@@ -193,13 +197,8 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
         if (pacote.numero_pacote >= MAX_PACKETS) continue;
 
         if (!recebido[pacote.numero_pacote]) {
-            dados_recebidos[pacote.numero_pacote] = malloc(pacote.tamanho_dados);
-            if (!dados_recebidos[pacote.numero_pacote]) {
-                fprintf(stderr, "Erro de alocação\n");
-                break;
-            }
-            memcpy(dados_recebidos[pacote.numero_pacote], pacote.dados, pacote.tamanho_dados);
-            tamanhos_recebidos[pacote.numero_pacote] = pacote.tamanho_dados;
+            char *dados_buffer = buffer_total + (pacote.numero_pacote * (BUFFER_SIZE - 8));
+            memcpy(dados_buffer, pacote.dados, pacote.tamanho_dados);
             recebido[pacote.numero_pacote] = 1;
             total_recebidos++;
 
@@ -208,16 +207,17 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
         }
     }
 
-    // Escrever em disco em ordem
     for (int i = 0; i <= *maior_pacote; ++i) {
         if (recebido[i]) {
-            fwrite(dados_recebidos[i], 1, tamanhos_recebidos[i], fp);
-            free(dados_recebidos[i]);
+            char *dados_buffer = buffer_total + (i * (BUFFER_SIZE - 8));
+            fwrite(dados_buffer, 1, pacote.tamanho_dados, fp);  
         }
     }
 
+    free(buffer_total);  
     return total_recebidos;
 }
+
 
 
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath, const char *hash_filepath) {
