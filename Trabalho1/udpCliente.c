@@ -34,8 +34,10 @@ void construirCaminhos(char *base_name, char *save_filepath, char *hash_filepath
 FILE *abrirArquivoRecebido(char *filepath);
 int criarSocketCliente(struct sockaddr_in *server_addr, const char *ip, int porta);
 void enviarSolicitacao(int sock, const char *nome_arquivo, struct sockaddr_in *server_addr);
+void receberHashMd5(int sock, const char *hash_filepath, struct sockaddr_in *server_addr);
 int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *recebido, int *maior_pacote);
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath, const char *hash_filepath);
+void verificarHash(int perdidos,const char *hash_filepath, const char *filepath);
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
@@ -64,6 +66,7 @@ int main(int argc, char *argv[]) {
     fp = abrirArquivoRecebido(save_filepath);
     sock = criarSocketCliente(&server_addr, ip_servidor, porta);
     enviarSolicitacao(sock, nome_arquivo, &server_addr);
+    receberHashMd5(sock, hash_filepath, &server_addr);
 
     clock_gettime(CLOCK_MONOTONIC, &inicio);
     total_recebidos = receberPacotes(sock, fp, &server_addr, recebido, &maior_pacote);
@@ -116,8 +119,43 @@ int criarSocketCliente(struct sockaddr_in *server_addr, const char *ip, int port
 }
 
 void enviarSolicitacao(int sock, const char *nome_arquivo, struct sockaddr_in *server_addr) {
-    sendto(sock, nome_arquivo, strlen(nome_arquivo), 0,
-           (struct sockaddr *)server_addr, sizeof(*server_addr));
+    if (sendto(sock, nome_arquivo, strlen(nome_arquivo), 0,
+               (struct sockaddr *)server_addr, sizeof(*server_addr)) < 0) {
+        perror("Erro ao enviar nome do arquivo");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+    printf("Solicitação do arquivo '%s' enviada.\n", nome_arquivo);
+}
+
+void receberHashMd5(int sock, const char *hash_filepath, struct sockaddr_in *server_addr) {
+    FILE *fp = fopen(hash_filepath, "wb");
+    if (!fp) {
+        perror("Erro ao criar arquivo de hash");
+        close(sock);
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned char hash_buffer[MD5_DIGEST_LENGTH];
+    size_t total = 0;
+    ssize_t r;
+    socklen_t addr_len = sizeof(*server_addr);
+    while (total < MD5_DIGEST_LENGTH) {
+        r = recvfrom(sock, hash_buffer + total, MD5_DIGEST_LENGTH - total, 0,
+                     (struct sockaddr *)server_addr, &addr_len);
+        if (r <= 0) {
+            perror("Erro ao receber hash");
+            fclose(fp);
+            remove(hash_filepath);
+            close(sock);
+            exit(EXIT_FAILURE);
+        }
+        total += r;
+    }
+
+    fwrite(hash_buffer, 1, MD5_DIGEST_LENGTH, fp);
+    fclose(fp);
+    printf("Hash MD5 recebido e salvo em '%s'.\n", hash_filepath);
 }
 
 int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *recebido, int *maior_pacote) {
@@ -156,25 +194,38 @@ void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, i
 
     int total_esperado = maior_pacote + 1;
     int perdidos = total_esperado - total_recebidos;
-    double taxa_kBps = tempo_s > 0 ? (double)total_recebidos * (BUFFER_SIZE - 8) / tempo_s / 1024.0 : 0;
+    size_t total_bytes = total_recebidos * (BUFFER_SIZE - 8);
 
-    printf("Total esperado: %d pacotes\n", total_esperado);
-    printf("Total recebido: %d pacotes\n", total_recebidos);
-    printf("Perdidos: %d pacotes\n", perdidos);
-    printf("Taxa de download: %.2f KB/s\n", taxa_kBps);
+    printf("Total esperado: %d pacotes | Total recebidos: %d | Total perdidos: %d \n", total_esperado, total_recebidos, perdidos);
+
+
+    if (tempo_s > 0 && total_bytes > 0) {
+        double kBps = total_bytes / 1024.0 / tempo_s;
+        double MBps = total_bytes / (1024.0 * 1024.0) / tempo_s;
+        printf("Velocidade de download: %.2f KB/s (%.2f MB/s)\n", kBps, MBps);
+    } else {
+        printf("Impossível calcular a velocidade.\n");
+    }
+
     printf("Tempo total: %lld ns (%lld ms, %.2fs)\n", tempo_ns, tempo_ms, tempo_s);
 
     unsigned char hashCalculado[EVP_MAX_MD_SIZE];
     calcularHashMd5(filepath, hashCalculado);
     salvarHashMd5(hash_filepath, hashCalculado);
 
+    verificarHash(perdidos, hash_filepath, filepath);
+}
+
+
+void verificarHash(int perdidos,const char *hash_filepath, const char *filepath) {
     if (perdidos == 0) {
         if (conferirHashMd5(hash_filepath, filepath)) {
-            printf("Integridade verificada: o arquivo está correto.\n\n");
+            printf("Hash MD5 conferido: o arquivo está correto.\n\n");
         } else {
-            printf("Integridade falhou: o arquivo está corrompido.\n\n");
+            printf("Hash MD5 conferido: o arquivo está corrompido.\n\n");
         }
     } else {
         printf("Integridade não verificada: houve perdas.\n\n");
     }
 }
+

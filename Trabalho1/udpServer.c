@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <openssl/md5.h> 
+#include "hashMd5.h"      
 
 #define BUFFER_SIZE 4096
 #define MAX_CLIENTE_MSG 256
@@ -39,7 +41,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor UDP aguardando solicitação na porta %d...\n", porta);
+    printf("Servidor UDP escutando na porta %d...\n", porta);
     aguardarSolicitacoes(sockfd);
     close(sockfd);
     return 0;
@@ -94,6 +96,19 @@ void enviarArquivo(const char *nome_arquivo, int sockfd, struct sockaddr_in *cli
         return;
     }
 
+    unsigned char hash[MD5_DIGEST_LENGTH];
+    calcularHashMd5(nome_arquivo, hash);
+
+    ssize_t sent = sendto(sockfd, hash, MD5_DIGEST_LENGTH, 0,
+                          (struct sockaddr *)client_addr, addr_len);
+    if (sent < 0) {
+        perror("Erro ao enviar hash MD5");
+        fclose(fp);
+        return;
+    } else if (sent < MD5_DIGEST_LENGTH) {
+        fprintf(stderr, "Aviso: hash MD5 enviado parcialmente.\n");
+    }
+
     Pacote pacote;
     uint32_t numero = 0;
     size_t lidos;
@@ -107,11 +122,12 @@ void enviarArquivo(const char *nome_arquivo, int sockfd, struct sockaddr_in *cli
         numero++;
     }
 
+    // Pacote de fim
     pacote.numero_pacote = numero;
     pacote.tamanho_dados = 0;
     sendto(sockfd, &pacote, sizeof(pacote), 0,
            (struct sockaddr *)client_addr, addr_len);
 
     fclose(fp);
-    printf("Arquivo %s enviado (%u pacotes).\n", nome_arquivo, numero);
+    printf("Arquivo %s enviado com sucesso (%u pacotes).\n", nome_arquivo, numero);
 }

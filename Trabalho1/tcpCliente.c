@@ -24,7 +24,7 @@
 void criarDiretorioSeNecessario();
 void construirCaminhos(char *base_name, char *save_filepath, char *hash_filepath);
 int conectarAoServidor(struct sockaddr_in *server_addr, const char *ip, int porta);
-void enviarNomeArquivo(int sock, const char *filename);
+void enviarSolicitacao(int sock, const char *filename);
 void receberHash(int sock, const char *hash_filepath, unsigned char *hash_buffer);
 void receberArquivo(int sock, const char *save_filepath, size_t *total_bytes);
 void calcularVelocidade(struct timespec inicio, struct timespec fim, size_t total_bytes);
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     sock = conectarAoServidor(&server_addr, ip, porta);
     clock_gettime(CLOCK_MONOTONIC, &inicio);
 
-    enviarNomeArquivo(sock, nome_arquivo);
+    enviarSolicitacao(sock, nome_arquivo);
     receberHash(sock, hash_filepath, hash_buffer);
     receberArquivo(sock, save_filepath, &total_bytes);
 
@@ -107,13 +107,13 @@ int conectarAoServidor(struct sockaddr_in *server_addr, const char *ip, int port
     return sock;
 }
 
-void enviarNomeArquivo(int sock, const char *filename) {
-    if (send(sock, filename, strlen(filename), 0) < 0) {
+void enviarSolicitacao(int sock, const char *nome_arquivo) {
+    if (send(sock, nome_arquivo, strlen(nome_arquivo), 0) < 0) {
         perror("Erro ao enviar nome do arquivo");
         close(sock);
         exit(EXIT_FAILURE);
     }
-    printf("Solicitação do arquivo '%s' enviada.\n", filename);
+    printf("Solicitação do arquivo '%s' enviada.\n", nome_arquivo);
 }
 
 void receberHash(int sock, const char *hash_filepath, unsigned char *hash_buffer) {
@@ -179,22 +179,25 @@ void receberArquivo(int sock, const char *save_filepath, size_t *total_bytes) {
 
 void calcularVelocidade(struct timespec inicio, struct timespec fim, size_t total_bytes) {
     long long t_ns = (fim.tv_sec - inicio.tv_sec) * 1000000000LL + (fim.tv_nsec - inicio.tv_nsec);
-    printf("Tempo total: %lld ns\n", t_ns);
+    double t_s = (double)t_ns / 1.0e9;
+    long long t_ms = t_ns / 1000000LL;
 
     if (t_ns > 0 && total_bytes > 0) {
-        double t_s = (double)t_ns / 1.0e9;
         double kBps = total_bytes / 1024.0 / t_s;
         double MBps = total_bytes / (1024.0 * 1024.0) / t_s;
         printf("Velocidade de download: %.2f KB/s (%.2f MB/s)\n", kBps, MBps);
     } else {
         printf("Impossível calcular a velocidade.\n");
     }
+
+    printf("Tempo total: %lld ns (%lld ms, %.2fs)\n", t_ns, t_ms, t_s);
 }
+
 
 void verificarHash(const char *hash_filepath, const char *save_filepath) {
     int ok = conferirHashMd5(hash_filepath, save_filepath);
     if (ok)
-        printf("Hash MD5 conferido: OK\n\n");
+        printf("Hash MD5 conferido: o arquivo está correto.\n\n");
     else
-        printf("Hash MD5 conferido: ERRO\n\n");
+        printf("Hash MD5 conferido: o arquivo está corrompido.\n\n");
 }

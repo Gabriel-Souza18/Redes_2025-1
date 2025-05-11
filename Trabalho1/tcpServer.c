@@ -141,7 +141,6 @@ void enviarArquivo(int client_sock, const char *filename) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_read, bytes_sent;
 
-    printf("Enviando arquivo '%s'...\n", filename);
     while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, fp)) > 0) {
         bytes_sent = send(client_sock, buffer, bytes_read, 0);
         if (bytes_sent < 0) {
