@@ -7,7 +7,7 @@
 #include <openssl/md5.h> 
 #include "hashMd5.h"      
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1400
 #define MAX_CLIENTE_MSG 256
 
 typedef struct {

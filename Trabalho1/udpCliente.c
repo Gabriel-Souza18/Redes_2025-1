@@ -168,27 +168,16 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
     ssize_t bytes_recebidos;
     int total_recebidos = 0;
 
-    int tentativas_vazias = 0;
-    const int max_tentativas = 3;
-
     while (1) {
         bytes_recebidos = recvfrom(sock, &pacote, sizeof(pacote), 0,
                                 (struct sockaddr *)server_addr, &addr_len);
 
         if (bytes_recebidos < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                printf("Timeout atingido, tentativa %d/%d...\n", tentativas_vazias + 1, max_tentativas);
-                tentativas_vazias++;
-                if (tentativas_vazias >= max_tentativas) {
-                    printf("Tempo de espera excedido (%d tentativas). Encerrando.\n", max_tentativas);
-                    break;
-                }
-                continue;
+                printf("Timeout atingido! Pacote final foi perdido! \n");
+                break;
             }
         }
-
-
-        tentativas_vazias = 0;
 
         if (pacote.tamanho_dados == 0) {
             printf("Pacote final recebido.\n");
