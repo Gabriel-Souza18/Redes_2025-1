@@ -110,7 +110,6 @@ int main(int argc, char *argv[]) {
     printf("Solicitação do arquivo '%s' enviada.\n", filename_request);
 
     // --- Etapa 1: Receber o hash MD5 primeiro ---
-    printf("Recebendo hash MD5...\n");
     fp_hash = fopen(hash_filepath, "wb"); // Usa o caminho completo
     if (fp_hash == NULL) {
         perror("Erro ao criar arquivo local para hash");
@@ -141,7 +140,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     fclose(fp_hash); // Fecha o arquivo de hash
-    printf("Hash MD5 recebido e salvo em '%s'.\n", hash_filepath);
 
 
     // --- Etapa 2: Receber o arquivo principal ---
@@ -155,7 +153,6 @@ int main(int argc, char *argv[]) {
     }
 
     // Receber dados do servidor em blocos e escrever no arquivo
-    printf("Recebendo arquivo principal...\n");
     memset(buffer, 0, BUFFER_SIZE); // Limpar buffer principal
     size_t total_file_bytes_received = 0; // Para acumular o tamanho do arquivo principal
     while ((bytes_received = recv(sock, buffer, BUFFER_SIZE, 0)) > 0) {
@@ -193,14 +190,12 @@ int main(int argc, char *argv[]) {
 
     long long tempoTotal_ns =  (diff_sec * 1000000000LL) + diff_nsec;
 
-    printf("Tempo total para obter o arquivo (incluindo hash): %lld ns\n", tempoTotal_ns);
+    printf("Tempo total para obter o arquivo: %lld ns\n", tempoTotal_ns);
 
     // --- Calcular e imprimir velocidade de download ---
     if (total_file_bytes_received > 0 && tempoTotal_ns > 0) {
         double tempo_s = (double)tempoTotal_ns / 1.0e9; // Tempo total em segundos
-        // Velocidade = (Total de Bytes / 1024 para KB) / Tempo em Segundos
         double velocidade_kBps = (double)total_file_bytes_received / 1024.0 / tempo_s;
-        // Velocidade = (Total de Bytes / (1024*1024) para MB) / Tempo em Segundos
         double velocidade_MBps = (double)total_file_bytes_received / (1024.0 * 1024.0) / tempo_s;
 
         printf("Velocidade de download: %.2f KB/s (%.2f MB/s)\n", velocidade_kBps, velocidade_MBps);
@@ -210,8 +205,6 @@ int main(int argc, char *argv[]) {
         printf("Tempo de download inválido ou zero, não é possível calcular a velocidade.\n");
     }
     // --- Etapa 3: Conferir hash MD5 do arquivo recebido ---
-    printf("Conferindo hash MD5...\n");
-    // Usa os caminhos completos para conferir o hash
     int resultadoHash = conferirHashMd5(hash_filepath, save_filepath);
 
     if (resultadoHash == 1) {

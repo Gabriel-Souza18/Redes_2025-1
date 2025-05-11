@@ -37,43 +37,39 @@ int main() {
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(SERVER_PORT);
 
-    // Bind
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("Erro no bind");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
-
-    // Listen
-    if (listen(server_fd, 5) < 0) { // Permitir até 5 conexões pendentes
+    if (listen(server_fd, 5) < 0) {
         perror("Erro no listen");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
     printf("Servidor escutando na porta %d...\n", SERVER_PORT);
 
-    while (1) { // Loop para aceitar múltiplas conexões (simplificado)
-        // Accept
+    while (1) { // Loop para aceitar múltiplas conexões 
+     
         client_sock = accept(server_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (client_sock < 0) {
             perror("Erro no accept");
-            continue; // Tenta aceitar a próxima conexão
+            continue; 
         }
         printf("Conexão aceita de %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         // Receber nome do arquivo do cliente
-        memset(filename, 0, MAX_FILENAME_SIZE); // Limpar buffer do nome do arquivo
+        memset(filename, 0, MAX_FILENAME_SIZE); 
         filename_len = recv(client_sock, filename, MAX_FILENAME_SIZE - 1, 0);
         if (filename_len <= 0) {
             perror("Erro ao receber nome do arquivo ou cliente desconectou");
             close(client_sock);
             continue;
         }
-        filename[filename_len] = '\0'; // Garantir terminação nula
+        filename[filename_len] = '\0';
         printf("Cliente solicitou o arquivo: %s\n", filename);
 
-        // --- Etapa 1: Calcular o hash do arquivo solicitado ---
-        // Primeiro, verificar se o arquivo existe antes de calcular o hash
+        // Etapa 1: Calcular o hash do arquivo solicitado 
         fp = fopen(filename, "rb");
         if (fp == NULL) {
             perror("Erro ao abrir arquivo solicitado para cálculo do hash");
@@ -83,23 +79,23 @@ int main() {
 
         // Calcular o hash MD5 do arquivo
         calcularHashMd5(filename, hash_buffer);
-        printf("Hash MD5 do arquivo '%s' calculado.\n", filename);
 
-        // --- Etapa 2: Enviar o hash MD5 primeiro ---
-        printf("Enviando hash MD5 (%d bytes) para o cliente...\n", MD5_DIGEST_LENGTH);
+
+        // Etapa 2: Enviar o hash MD5
+
         bytes_sent = send(client_sock, hash_buffer, MD5_DIGEST_LENGTH, 0);
         if (bytes_sent < 0) {
             perror("Erro ao enviar hash");
             close(client_sock);
-            continue; // Próxima conexão
+            continue; 
         }
         if (bytes_sent < MD5_DIGEST_LENGTH) {
              fprintf(stderr, "Aviso: Nem todos os bytes do hash foram enviados.\n");
         }
-         printf("Hash MD5 enviado com sucesso.\n");
 
-        // --- Etapa 3: Abrir e enviar o arquivo original ---
-        fp = fopen(filename, "rb"); // Reabre o arquivo para leitura
+
+        // Etapa 3: Abrir e enviar o arquivo original 
+        fp = fopen(filename, "rb"); 
 
         // Ler arquivo em blocos e enviar ao cliente
         printf("Enviando arquivo '%s'...\n", filename);
@@ -109,11 +105,10 @@ int main() {
             bytes_sent = send(client_sock, file_buffer, bytes_read, 0);
             if (bytes_sent < 0) {
                 perror("Erro ao enviar dados do arquivo");
-                break; // Sai do loop de envio se houver erro
+                break; 
             }
             if (bytes_sent < bytes_read) {
                  fprintf(stderr, "Aviso: Nem todos os bytes do arquivo foram enviados na última operação send().\n");
-                 // Poderia adicionar lógica para reenviar o restante
             }
         }
 
@@ -123,13 +118,13 @@ int main() {
             printf("Arquivo '%s' enviado com sucesso.\n", filename);
         }
 
-        // --- Etapa 4: Limpeza ---
-        fclose(fp); // Fecha o arquivo original
+        // Etapa 4: Limpeza 
+        fclose(fp);
         close(client_sock); // Fecha a conexão com o cliente APÓS enviar hash e arquivo
         printf("Conexão com %s:%d fechada.\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     }
 
-    // Fechar socket do servidor (nunca alcançado neste loop infinito)
+    // Fechar socket do servidor 
     close(server_fd);
 
     return 0;
