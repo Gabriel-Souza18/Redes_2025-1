@@ -37,7 +37,7 @@ void enviarSolicitacao(int sock, const char *nome_arquivo, struct sockaddr_in *s
 void receberHashMd5(int sock, const char *hash_filepath, struct sockaddr_in *server_addr);
 int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *recebido, int *maior_pacote);
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath, const char *hash_filepath);
-void verificarHash(int perdidos,const char *hash_filepath, const char *filepath);
+void verificarHash(int perdidos, const char *hash_filepath, const char *filepath);
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
@@ -65,6 +65,10 @@ int main(int argc, char *argv[]) {
 
     fp = abrirArquivoRecebido(save_filepath);
     sock = criarSocketCliente(&server_addr, ip_servidor, porta);
+
+    struct timeval timeout = {5, 0};
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
     enviarSolicitacao(sock, nome_arquivo, &server_addr);
     receberHashMd5(sock, hash_filepath, &server_addr);
 
@@ -164,12 +168,32 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
     ssize_t bytes_recebidos;
     int total_recebidos = 0;
 
+    int tentativas_vazias = 0;
+    const int max_tentativas = 3;
+
     while (1) {
         bytes_recebidos = recvfrom(sock, &pacote, sizeof(pacote), 0,
-                                   (struct sockaddr *)server_addr, &addr_len);
-        if (bytes_recebidos < 0) break;
+                                (struct sockaddr *)server_addr, &addr_len);
 
-        if (pacote.tamanho_dados == 0) break;
+        if (bytes_recebidos < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                printf("Timeout atingido, tentativa %d/%d...\n", tentativas_vazias + 1, max_tentativas);
+                tentativas_vazias++;
+                if (tentativas_vazias >= max_tentativas) {
+                    printf("Tempo de espera excedido (%d tentativas). Encerrando.\n", max_tentativas);
+                    break;
+                }
+                continue;
+            }
+        }
+
+
+        tentativas_vazias = 0;
+
+        if (pacote.tamanho_dados == 0) {
+            printf("Pacote final recebido.\n");
+            break;
+        }
 
         if (pacote.numero_pacote >= MAX_PACKETS) continue;
 
@@ -198,7 +222,6 @@ void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, i
 
     printf("Total esperado: %d pacotes | Total recebidos: %d | Total perdidos: %d \n", total_esperado, total_recebidos, perdidos);
 
-
     if (tempo_s > 0 && total_bytes > 0) {
         double kBps = total_bytes / 1024.0 / tempo_s;
         double MBps = total_bytes / (1024.0 * 1024.0) / tempo_s;
@@ -216,8 +239,7 @@ void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, i
     verificarHash(perdidos, hash_filepath, filepath);
 }
 
-
-void verificarHash(int perdidos,const char *hash_filepath, const char *filepath) {
+void verificarHash(int perdidos, const char *hash_filepath, const char *filepath) {
     if (perdidos == 0) {
         if (conferirHashMd5(hash_filepath, filepath)) {
             printf("Hash MD5 conferido: o arquivo está correto.\n\n");
@@ -228,4 +250,3 @@ void verificarHash(int perdidos,const char *hash_filepath, const char *filepath)
         printf("Integridade não verificada: houve perdas.\n\n");
     }
 }
-
