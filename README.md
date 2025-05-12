@@ -1,11 +1,7 @@
 # Transferencia de arquivo TCP vs UDP
 
 ## Descrição 
-Este projeto implementa uma aplicação cliente-servidor em C que realiza transferência de arquivos utilizando os protocolos TCP e UDP, com o objetivo de comparar seu desempenho em termos de:
-
-* Taxa de transferência
-* Confiabilidade
-* Simplicidade de implementação
+Este projeto implementa uma aplicação cliente-servidor em C que realiza transferência de arquivos utilizando os protocolos TCP e UDP.
 
 ## Requisitos 
 * Compilador GCC
@@ -22,9 +18,6 @@ Fundamentais para o cálculo e verificação do hash MD5 dos arquivos
 * **sys/stat.h, sys/types.h**:<br> Utilizadas para operações no sistema de arquivos, como a criação de diretórios (mkdir) e verificação de status de arquivos (stat).
 * **libgen.h**: <br>Usada para a função basename, útil para extrair nomes de arquivos de caminhos.
 
-## HashMD5
-Explicar as funcoes dentro do hashMd5.c
-
 
 ## Compilação e limpeza
     make TCP
@@ -39,16 +32,16 @@ para limpar arquivos gerados pela execução
 
 Abra dois terminais, um vai ser o server e o outro o cliente 
 ### Server:
-    ./tcpServer
+    ./tcpServer (Porta)
 ou
     
-    ./udpServer
+    ./udpServer (Porta)
 
 ### Cliente:
-    ./tcpCliente
+    ./tcpCliente (IP) (Porta) (Caminho do arquivo)
 ou
 
-    ./udpCliente
+    ./udpCliente (IP) (Porta) (Caminho do arquivo)
 
 ## Autores 
 Gabriel da Silva Souza \
