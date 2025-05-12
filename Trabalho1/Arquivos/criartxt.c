@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define FILE_SIZE 1000000000 // Tamanho do arquivo em bytes
+#define FILE_SIZE 100000000 // Tamanho do arquivo em bytes
 #define FILENAME_MAX_LEN 32 // Tamanho máximo para o nome do arquivo
 
 int main() {

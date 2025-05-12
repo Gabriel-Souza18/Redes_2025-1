@@ -164,10 +164,22 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
     ssize_t bytes_recebidos;
     int total_recebidos = 0;
 
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 300000; 
+    
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+        perror("Erro ao configurar timeout de recepção");
+        exit(EXIT_FAILURE);
+    }
+
     while (1) {
         bytes_recebidos = recvfrom(sock, &pacote, sizeof(pacote), 0,
                                    (struct sockaddr *)server_addr, &addr_len);
-        if (bytes_recebidos < 0) break;
+        if (bytes_recebidos < 0) {
+            perror("Timeout ou erro na recepção de pacotes");
+            break;
+        }
 
         if (pacote.tamanho_dados == 0) break;
 
@@ -186,7 +198,6 @@ int receberPacotes(int sock, FILE *fp, struct sockaddr_in *server_addr, int *rec
 
     return total_recebidos;
 }
-
 void calcularEMostrarEstatisticas(struct timespec inicio, struct timespec fim, int maior_pacote, int total_recebidos, const char *filepath, const char *hash_filepath) {
     long long tempo_ns = (fim.tv_sec - inicio.tv_sec) * 1000000000LL + (fim.tv_nsec - inicio.tv_nsec);
     double tempo_s = (double)tempo_ns / 1.0e9;
