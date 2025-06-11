@@ -54,7 +54,12 @@ Limpar:
 ```
 make clean
 ```
+## testar
+```
+ab -n 10000 -c 100 http://localhost:2020/image.jpg
 
+
+```
 ## Autores 
 Gabriel da Silva Souza \
 Braian Melo Silva \
