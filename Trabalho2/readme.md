@@ -27,10 +27,15 @@ Este projeto implementa um servidor web em C com qautro técnicas distintas de p
 ```
 Trabalho2
 ├── src/
+|   ├── utils/
+|   |   ├── httpHandler.c
+|   |   ├── httpHandler.h
+|   |   ├── serverUtils.c
+|   |   └── serverUtils.h
 │   ├── iterativo.c
 │   ├── fork_thread.c
-│   ├── threadpool.c
-│   └── select_server.c
+│   ├── thread_fila.c
+│   └── concorrente .c
 ├── www/
 │   ├── index.html
 │   ├── image.jpg
