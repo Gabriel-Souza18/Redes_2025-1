@@ -4,12 +4,15 @@
 
 # Objetos compilados
 *.o
+*
 
 # Binários gerados
 tcpCliente
 tcpServer
 udpCliente
 udpServer
+
+concorrente
 
 # Diretório de arquivos recebidos
 Recebidos/
