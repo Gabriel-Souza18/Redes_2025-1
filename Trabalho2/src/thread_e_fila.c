@@ -15,10 +15,8 @@ int front = 0, rear = 0;
 pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queue_not_empty = PTHREAD_COND_INITIALIZER;
 
-// Mutex para proteger o arquivo de log
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Ponteiro global para o arquivo de log
 FILE *log_file = NULL;
 
 void enqueue(int client_socket) {
@@ -50,7 +48,6 @@ void handle_client(int client_socket) {
 
     buffer[bytes_read] = '\0';
 
-    // Grava a requisição no arquivo de log
     pthread_mutex_lock(&log_mutex);
     fprintf(log_file, "Requisição recebida:\n%s\n", buffer);
     fflush(log_file);
@@ -96,7 +93,6 @@ int main() {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    // Abre o arquivo de log em modo append
     log_file = fopen("server.log", "a");
     if (!log_file) {
         perror("Erro ao abrir arquivo de log");
@@ -137,7 +133,6 @@ int main() {
         enqueue(client_socket);
     }
 
-    // Nunca chega aqui, mas por boa prática:
     fclose(log_file);
     close(server_fd);
     return 0;
