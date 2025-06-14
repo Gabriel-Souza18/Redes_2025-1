@@ -6,9 +6,18 @@ UTILS_DIR = $(SRC_DIR)/utils
 BUILD_DIR = build
 
 # Alvos principais
-all: concorrente
+all: concorrente iterativo thread thread_e_fila
 
 concorrente: $(SRC_DIR)/concorrente.c $(UTILS_DIR)/httpHandler.o $(UTILS_DIR)/serverUtils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+iterativo: $(SRC_DIR)/iterativo.c $(UTILS_DIR)/httpHandler.o $(UTILS_DIR)/serverUtils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+thread: $(SRC_DIR)/thread.c $(UTILS_DIR)/httpHandler.o $(UTILS_DIR)/serverUtils.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+thread_e_fila: $(SRC_DIR)/thread_e_fila.c $(UTILS_DIR)/httpHandler.o $(UTILS_DIR)/serverUtils.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Regras para objetos
@@ -19,5 +28,5 @@ $(UTILS_DIR)/serverUtils.o: $(UTILS_DIR)/serverUtils.c $(UTILS_DIR)/serverUtils.
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f concorrente
+	rm -f concorrente iterativo thread thread_e_fila
 	rm -f $(UTILS_DIR)/*.o
