@@ -18,15 +18,45 @@ const char* get_mime_type(const char* path) {
     return "text/plain";
 }
 
-void serve_file(int client_socket, const char *file_path){
-        FILE *file = fopen(file_path, "rb");
+void serve_file(int client_socket, const char* file_path) {
+    FILE *file = fopen(file_path, "rb");
     if (!file) {
+        perror("fopen failed");  // Adicione esta linha para debug
         char *response = "HTTP/1.1 404 Not Found\r\n\r\n";
         send(client_socket, response, strlen(response), 0);
         return;
-    
     }
+
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    rewind(file);
+
+    // Debug: imprima o tamanho do arquivo
+    printf("Enviando arquivo %s (%ld bytes)\n", file_path, file_size);
+
+    const char *mime_type = get_mime_type(file_path);
+    char headers[1024];
+    snprintf(headers, sizeof(headers),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Length: %ld\r\n"
+        "Connection: close\r\n\r\n",
+        mime_type, file_size);
+
+    send(client_socket, headers, strlen(headers), 0);
+
+    char buffer[BUFFER_SIZE];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        ssize_t sent = send(client_socket, buffer, bytes_read, 0);
+        if (sent < 0) {
+            perror("send failed");
+            break;
+        }
+    }
+    fclose(file);
 }
+
 
 
 void handle_request(int client_socket){
