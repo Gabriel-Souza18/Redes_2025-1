@@ -13,6 +13,9 @@ udpCliente
 udpServer
 
 concorrente
+iterativo
+thread
+thread_e_fila
 
 # Diretório de arquivos recebidos
 Recebidos/

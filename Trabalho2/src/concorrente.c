@@ -1,4 +1,3 @@
-// servidor_concorrente.c
 #include <sys/select.h>
 #include <stdio.h>
 #include <stdlib.h>
