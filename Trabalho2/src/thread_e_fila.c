@@ -13,7 +13,6 @@
 #define MAX_CONNECTIONS 100
 #define THREAD_POOL_SIZE 4
 
-// Fila de sockets
 int queue[MAX_CONNECTIONS];
 int front = 0, rear = 0;
 
@@ -23,11 +22,9 @@ pthread_cond_t queue_not_empty = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 FILE *log_file = NULL;
 
-// Função para detectar content-type pelo sufixo exato
 const char* get_content_type(const char* path) {
     const char* ext = strrchr(path, '.');
     if (!ext) return "application/octet-stream";
-
     if (strcmp(ext, ".html") == 0) return "text/html";
     if (strcmp(ext, ".jpg") == 0) return "image/jpeg";
     if (strcmp(ext, ".jpeg") == 0) return "image/jpeg";
@@ -37,12 +34,10 @@ const char* get_content_type(const char* path) {
     return "application/octet-stream";
 }
 
-// Log simples: IP + hora + requisição
 void log_request(struct sockaddr_in *client_addr, const char *request) {
     time_t now = time(NULL);
     char time_str[64];
     strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", localtime(&now));
-
     pthread_mutex_lock(&log_mutex);
     fprintf(log_file, "[%s] %s - %s\n",
         time_str,
@@ -80,8 +75,6 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     }
 
     buffer[bytes_read] = '\0';
-
-    // Extrai método e caminho
     char method[8], path[256];
     sscanf(buffer, "%s %s", method, path);
     char req_line[512];
@@ -89,12 +82,10 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     log_request(&client_addr, req_line);
 
     if (strcmp(method, "GET") == 0) {
-        char filepath[512] = "www/index.html";  // padrão: index.html dentro de www
+        char filepath[512] = "www/index.html";
         char request_path[256] = "";
 
-        // Extrai caminho solicitado após GET /
         if (sscanf(buffer, "GET /%255s", request_path) == 1) {
-            // Se começar com "www/", remove esse prefixo para evitar "www/www/arquivo"
             if (strncmp(request_path, "www/", 4) == 0) {
                 memmove(request_path, request_path + 4, strlen(request_path + 4) + 1);
             }
@@ -123,9 +114,7 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
         } else {
             struct stat st;
             fstat(fd, &st);
-
             const char* content_type = get_content_type(filepath);
-
             char header[512];
             snprintf(header, sizeof(header),
                      "HTTP/1.1 200 OK\r\n"
@@ -159,7 +148,6 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
 void* worker_thread(void* arg) {
     while (1) {
         int client_socket = dequeue();
-
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
         getpeername(client_socket, (struct sockaddr*)&addr, &len);
@@ -173,7 +161,6 @@ int main() {
     int server_fd, client_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-
     log_file = fopen("server.log", "a");
     if (!log_file) {
         perror("Erro ao abrir arquivo de log");
