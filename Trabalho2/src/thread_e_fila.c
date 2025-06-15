@@ -191,11 +191,7 @@ int main() {
         pthread_create(&threads[i], NULL, worker_thread, NULL);
     }
 
-<<<<<<< HEAD
-//   printf("Servidor rodando na porta %d...\n", PORT);
-=======
     printf("Servidor (threads + fila) rodando na porta %d...\n", PORT);
->>>>>>> c2e3804cbf36d3671f9a9adc8ca37abef3c5646d
 
     while (1) {
         if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
