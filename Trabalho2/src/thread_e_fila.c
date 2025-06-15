@@ -191,8 +191,6 @@ int main() {
         pthread_create(&threads[i], NULL, worker_thread, NULL);
     }
 
-  //  printf("Servidor (threads + fila) rodando na porta %d...\n", PORT);
-
     while (1) {
         if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept falhou");
