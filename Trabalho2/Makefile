@@ -30,3 +30,4 @@ $(UTILS_DIR)/serverUtils.o: $(UTILS_DIR)/serverUtils.c $(UTILS_DIR)/serverUtils.
 clean:
 	rm -f concorrente iterativo thread thread_e_fila
 	rm -f $(UTILS_DIR)/*.o
+	rm -f log.txt
