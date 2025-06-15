@@ -21,7 +21,7 @@ const char* get_mime_type(const char* path) {
 void serve_file(int client_socket, const char* file_path) {
     FILE *file = fopen(file_path, "rb");
     if (!file) {
-        perror("fopen failed");  // Adicione esta linha para debug
+        perror("fopen failed");  
         char *response = "HTTP/1.1 404 Not Found\r\n\r\n";
         send(client_socket, response, strlen(response), 0);
         return;
@@ -30,9 +30,6 @@ void serve_file(int client_socket, const char* file_path) {
     fseek(file, 0, SEEK_END);
     long file_size = ftell(file);
     rewind(file);
-
-    // Debug: imprima o tamanho do arquivo
-   // printf("Enviando arquivo %s (%ld bytes)\n", file_path, file_size);
 
     const char *mime_type = get_mime_type(file_path);
     char headers[1024];

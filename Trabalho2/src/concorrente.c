@@ -9,22 +9,18 @@
 int main() {
     int listener = create_server_socket(PORT);
     struct sockaddr_in serveraddr = configure_server_address(PORT);
-    
-    // Bind
+
     if (bind(listener, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1) {
         perror("bind");
         close(listener);
         exit(1);
     }
 
-    // Listen
     if (listen(listener, 10) == -1) {
         perror("listen");
         close(listener);
         exit(1);
     }
-
-//    printf("Servidor concorrente (select) rodando na porta %d\n", PORT);
 
     fd_set master, read_fds;
     FD_ZERO(&master);
@@ -52,12 +48,10 @@ int main() {
                     } else {
                         FD_SET(newfd, &master);
                         if (newfd > fdmax) fdmax = newfd;
- //                       printf("Nova conexão (socket %d)\n", newfd);
                     }
                 } else {
                     handle_request(i);
                     FD_CLR(i, &master);
- //                   printf("Conexão finalizada (socket %d)\n", i);
                 }
             }
         }
