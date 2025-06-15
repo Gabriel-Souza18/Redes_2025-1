@@ -8,6 +8,6 @@
 
 const char* get_mime_type(const char* path);
 void serve_file(int client_socket, const char* file_path);
-void handle_request(int client_socket);
+void handle_request(int client_socket, const char* client_ip);
 
 #endif

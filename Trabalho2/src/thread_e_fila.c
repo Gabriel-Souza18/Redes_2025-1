@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <time.h>
 #include <sys/stat.h>
+#include "utils/serverUtils.h"  // Para log_request
 
 #define PORT 2023
 #define MAX_CONNECTIONS 100
@@ -19,9 +20,6 @@ int front = 0, rear = 0;
 pthread_mutex_t queue_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queue_not_empty = PTHREAD_COND_INITIALIZER;
 
-pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
-FILE *log_file = NULL;
-
 const char* get_content_type(const char* path) {
     const char* ext = strrchr(path, '.');
     if (!ext) return "application/octet-stream";
@@ -30,21 +28,7 @@ const char* get_content_type(const char* path) {
     if (strcmp(ext, ".jpeg") == 0) return "image/jpeg";
     if (strcmp(ext, ".png") == 0) return "image/png";
     if (strcmp(ext, ".pdf") == 0) return "application/pdf";
-
     return "application/octet-stream";
-}
-
-void log_request(struct sockaddr_in *client_addr, const char *request) {
-    time_t now = time(NULL);
-    char time_str[64];
-    strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", localtime(&now));
-    pthread_mutex_lock(&log_mutex);
-    fprintf(log_file, "[%s] %s - %s\n",
-        time_str,
-        inet_ntoa(client_addr->sin_addr),
-        request);
-    fflush(log_file);
-    pthread_mutex_unlock(&log_mutex);
 }
 
 void enqueue(int client_socket) {
@@ -144,7 +128,6 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     close(client_socket);
 }
 
-
 void* worker_thread(void* arg) {
     while (1) {
         int client_socket = dequeue();
@@ -161,11 +144,6 @@ int main() {
     int server_fd, client_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    log_file = fopen("server.log", "a");
-    if (!log_file) {
-        perror("Erro ao abrir arquivo de log");
-        exit(EXIT_FAILURE);
-    }
 
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket falhou");
@@ -199,7 +177,6 @@ int main() {
         enqueue(client_socket);
     }
 
-    fclose(log_file);
     close(server_fd);
     return 0;
 }
