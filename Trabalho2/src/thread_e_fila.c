@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <netinet/in.h>
 
-#define PORT 2020
+#define PORT 2023
 #define MAX_CONNECTIONS 100
 #define THREAD_POOL_SIZE 4
 
@@ -49,7 +49,7 @@ void handle_client(int client_socket) {
     buffer[bytes_read] = '\0';
 
     pthread_mutex_lock(&log_mutex);
-    fprintf(log_file, "Requisição recebida:\n%s\n", buffer);
+//    fprintf(log_file, "Requisição recebida:\n%s\n", buffer);
     fflush(log_file);
     pthread_mutex_unlock(&log_mutex);
 
@@ -123,7 +123,7 @@ int main() {
         pthread_create(&threads[i], NULL, worker_thread, NULL);
     }
 
-    printf("Servidor rodando na porta %d...\n", PORT);
+//   printf("Servidor rodando na porta %d...\n", PORT);
 
     while (1) {
         if ((client_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {

@@ -32,7 +32,7 @@ void serve_file(int client_socket, const char* file_path) {
     rewind(file);
 
     // Debug: imprima o tamanho do arquivo
-    printf("Enviando arquivo %s (%ld bytes)\n", file_path, file_size);
+   // printf("Enviando arquivo %s (%ld bytes)\n", file_path, file_size);
 
     const char *mime_type = get_mime_type(file_path);
     char headers[1024];

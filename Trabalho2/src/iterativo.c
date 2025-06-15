@@ -28,7 +28,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor iterativo ouvindo na porta %d...\n", PORTA);
+    //printf("Servidor iterativo ouvindo na porta %d...\n", PORTA);
 
     while (1) {
         client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_len);
@@ -38,7 +38,7 @@ int main() {
         }
 
         inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
-        printf("Conexão recebida de %s:%d\n", client_ip, ntohs(client_addr.sin_port));
+        //printf("Conexão recebida de %s:%d\n", client_ip, ntohs(client_addr.sin_port));
 
         handle_request(client_socket);
 

@@ -8,7 +8,7 @@
 #include "serverUtils.h"
 #include "httpHandler.h"
 
-#define PORTA 2020
+#define PORTA 2022
 
 typedef struct {
     int client_socket;
@@ -20,7 +20,7 @@ void* thread_func(void* arg) {
 
     char ip_str[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(data->client_addr.sin_addr), ip_str, sizeof(ip_str));
-    printf("Conexão recebida de %s:%d (thread)\n", ip_str, ntohs(data->client_addr.sin_port));
+ //   printf("Conexão recebida de %s:%d (thread)\n", ip_str, ntohs(data->client_addr.sin_port));
 
     handle_request(data->client_socket);
 
@@ -49,7 +49,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Servidor concorrente (pthread) ouvindo na porta %d...\n", PORTA);
+//    printf("Servidor concorrente (pthread) ouvindo na porta %d...\n", PORTA);
 
     while (1) {
         client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_len);

@@ -5,7 +5,7 @@
 #include "utils/httpHandler.h"
 #include "utils/serverUtils.h"
 
-#define PORT 2020
+#define PORT 2021
 
 int main() {
     int listener = create_server_socket(PORT);
@@ -25,8 +25,7 @@ int main() {
         exit(1);
     }
 
-    printf("Servidor concorrente (select) rodando na porta %d\n", PORT);
-    printf("Acesse: http://localhost:%d\n", PORT);
+//    printf("Servidor concorrente (select) rodando na porta %d\n", PORT);
 
     fd_set master, read_fds;
     FD_ZERO(&master);
@@ -54,12 +53,12 @@ int main() {
                     } else {
                         FD_SET(newfd, &master);
                         if (newfd > fdmax) fdmax = newfd;
-                        printf("Nova conexão (socket %d)\n", newfd);
+ //                       printf("Nova conexão (socket %d)\n", newfd);
                     }
                 } else {
                     handle_request(i);
                     FD_CLR(i, &master);
-                    printf("Conexão finalizada (socket %d)\n", i);
+ //                   printf("Conexão finalizada (socket %d)\n", i);
                 }
             }
         }

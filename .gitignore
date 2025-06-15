@@ -4,7 +4,7 @@
 
 # Objetos compilados
 *.o
-*
+
 
 # Binários gerados
 tcpCliente
