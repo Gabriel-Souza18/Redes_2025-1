@@ -40,6 +40,7 @@ Trabalho2
 │   ├── index.html
 │   ├── image.jpg
 │   └── document.pdf
+├── testes.sh
 ├── documentação
 └── Makefile
 ```
@@ -59,11 +60,16 @@ Limpar:
 ```
 make clean
 ```
-## testar
+## testar individual
 ```
-ab -n 10000 -c 100 http://localhost:2020/image.jpg
+ab -n 1000 -c 100 http://localhost:2020/image.jpg
 
-
+```
+## teste conjunto
+Testa os quatro servidores, com podendo mudar as configurações (REQUESTS, CONCURRENCY,TEST_FILE) no inicio do arquivo.<br>
+lembrando que os arquivos ja devem estar compilados.
+```
+./testes.sh
 ```
 ## Autores 
 Gabriel da Silva Souza \

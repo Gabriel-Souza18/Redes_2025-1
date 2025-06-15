@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configurações
-REQUESTS=10000
+REQUESTS=1000
 CONCURRENCY=10
 TEST_FILE="image.jpg"
 
@@ -20,12 +20,6 @@ kill_server() {
     
     # Mata por nome do executável
     pkill -x "$server_name" 2>/dev/null
-    
-    # Mata por PID se tiver o arquivo
-    if [ -f "$server_name.pid" ]; then
-        kill -9 $(cat "$server_name.pid") 2>/dev/null
-        rm -f "$server_name.pid"
-    fi
     
     # Mata por porta
     local pid=$(lsof -ti :$port)
@@ -48,7 +42,7 @@ for server_info in "${SERVERS[@]}"; do
     # Inicia servidor gravando PID
     ./"$server_name" &
     SERVER_PID=$!
-    echo $SERVER_PID > "$server_name.pid"
+
     
     sleep 1  # Espera inicialização
     
