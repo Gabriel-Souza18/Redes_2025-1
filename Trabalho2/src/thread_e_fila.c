@@ -81,16 +81,9 @@ void handle_client(int client_socket, struct sockaddr_in client_addr) {
     snprintf(req_line, sizeof(req_line), "%s %s", method, path);
     log_request(&client_addr, req_line);
 
-<<<<<<< HEAD
-    pthread_mutex_lock(&log_mutex);
-//    fprintf(log_file, "Requisição recebida:\n%s\n", buffer);
-    fflush(log_file);
-    pthread_mutex_unlock(&log_mutex);
-=======
     if (strcmp(method, "GET") == 0) {
         char filepath[512] = "www/index.html";
         char request_path[256] = "";
->>>>>>> c2e3804cbf36d3671f9a9adc8ca37abef3c5646d
 
         if (sscanf(buffer, "GET /%255s", request_path) == 1) {
             if (strncmp(request_path, "www/", 4) == 0) {
