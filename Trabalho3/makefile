@@ -9,7 +9,14 @@ utils.o: utils.c utils.h
 serverUtils.o: serverUtils.c serverUtils.h
 	gcc -c serverUtils.c
 
+cliente: cliente.c clienteUtils.o
+	gcc -o cliente cliente.c clienteUtils.o
+
+clienteUtils.o: clienteUtils.c clienteUtils.h
+	gcc -c clienteUtils.c
+
 clean:
 	rm -f server 
+	rm -f cliente
 	rm -f *.o
 	rm -f  server.log
