@@ -22,7 +22,6 @@ void logger(const char* msg, const char* filename) {
     }
 }
 
-// Obtém string de timestamp formatada
 void obter_timestamp_string(char *buffer, int tamanho_buffer) {
     time_t agora;
     struct tm *info_tempo;
@@ -32,9 +31,9 @@ void obter_timestamp_string(char *buffer, int tamanho_buffer) {
     strftime(buffer, tamanho_buffer, "%Y-%m-%d %H:%M:%S", info_tempo);
 }
 
-// Log com timestamp para modo verbose - CORRIGIDO para aceitar nome do arquivo
+
 void log_com_timestamp(const char *mensagem, int modo_verboso) {
-    // Exibe no console apenas se verbose
+    // Exibe no console apenas se verbose 
     if (modo_verboso && mensagem != NULL) {
         char timestamp[26];
         obter_timestamp_string(timestamp, sizeof(timestamp));
@@ -42,7 +41,6 @@ void log_com_timestamp(const char *mensagem, int modo_verboso) {
     }
 }
 
-// Calcula checksum simples (soma dos bytes)
 uint32_t calcular_checksum(const char *dados, int tamanho) {
     uint32_t soma = 0;
     for (int i = 0; i < tamanho; i++) {
@@ -51,7 +49,6 @@ uint32_t calcular_checksum(const char *dados, int tamanho) {
     return soma;
 }
 
-// Verifica integridade do pacote
 int verificar_integridade_pacote(const void *pacote, uint32_t checksum_esperado, int tamanho_dados) {
     if (tamanho_dados <= 0) return 1; // Pacote sem dados é válido
     
@@ -60,7 +57,6 @@ int verificar_integridade_pacote(const void *pacote, uint32_t checksum_esperado,
     return checksum_calculado == checksum_esperado;
 }
 
-// Simula perda de pacote baseado na taxa configurada
 int simular_perda_pacote(double taxa_perda) {
     if (taxa_perda <= 0.0) return 0;
     if (taxa_perda >= 1.0) return 1;
@@ -68,8 +64,6 @@ int simular_perda_pacote(double taxa_perda) {
     double valor_aleatorio = (double)rand() / RAND_MAX;
     return valor_aleatorio < taxa_perda;
 }
-
-// Imprime estatísticas do servidor (usa logger existente)
 void imprimir_estatisticas_servidor(uint32_t pacotes_recebidos, uint32_t pacotes_enviados, 
                                    uint32_t acks_enviados, uint32_t nacks_enviados,
                                    uint32_t pacotes_corrompidos, uint32_t pacotes_duplicados,
@@ -118,7 +112,6 @@ void imprimir_estatisticas_servidor(uint32_t pacotes_recebidos, uint32_t pacotes
     logger("================================", "server.log");
 }
 
-// Imprime estatísticas do cliente (usa logger existente)
 void imprimir_estatisticas_cliente(uint32_t pacotes_enviados, uint32_t pacotes_recebidos,
                                   uint32_t retransmissoes, uint32_t timeouts,
                                   uint32_t total_bytes_enviados, time_t tempo_inicio, time_t tempo_fim) {

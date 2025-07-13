@@ -24,7 +24,7 @@ typedef enum {
     MSG_NACK = 5
 } MessageType;
 
-// Estrutura do pacote com checksum
+//pacote
 typedef struct {
     MessageType tipo;
     uint32_t num_sequencia;
@@ -33,7 +33,7 @@ typedef struct {
     char dados[MAX_BUFFER_SIZE - sizeof(MessageType) - sizeof(uint32_t) * 3];
 } Pacote;
 
-// Estrutura para estatísticas do servidor
+//estatísticas do servidor
 typedef struct {
     uint32_t pacotes_recebidos;
     uint32_t pacotes_enviados;
@@ -45,6 +45,7 @@ typedef struct {
     time_t tempo_fim;
 } EstatisticasServidor;
 
+//servidor UDP
 typedef struct {
     int socket_fd;
     struct sockaddr_in endereco_servidor;
@@ -58,7 +59,7 @@ typedef struct {
     EstatisticasServidor estatisticas;
 } ServidorUDP;
 
-// Funções básicas do servidor UDP
+
 int servidor_udp_abrir(ServidorUDP *servidor, int porta);
 int servidor_udp_fechar(ServidorUDP *servidor);
 int servidor_udp_receber_pacote(ServidorUDP *servidor, Pacote *pacote);
@@ -70,4 +71,4 @@ int servidor_udp_processar_transmissao(ServidorUDP *servidor);
 void servidor_udp_definir_verboso(ServidorUDP *servidor, int verboso);
 void servidor_udp_definir_taxa_perda(ServidorUDP *servidor, double taxa_perda);
 
-#endif // SERVER_UTILS_H
+#endif 

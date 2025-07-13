@@ -20,7 +20,7 @@ typedef enum {
     MSG_NACK = 5
 } MessageType;
 
-// Estrutura do pacote com checksum
+// pacote
 typedef struct {
     MessageType tipo;
     uint32_t num_sequencia;
@@ -29,7 +29,7 @@ typedef struct {
     char dados[BUFFER_SIZE - sizeof(MessageType) - sizeof(uint32_t) * 3];
 } Pacote;
 
-// Estrutura para estatísticas do cliente
+// estatísticas do cliente
 typedef struct {
     uint32_t pacotes_enviados;
     uint32_t pacotes_recebidos;
@@ -40,6 +40,7 @@ typedef struct {
     time_t tempo_fim;
 } EstatisticasCliente;
 
+// cliente UDP
 typedef struct {
     int socket_fd;
     struct sockaddr_in endereco_servidor;
@@ -58,8 +59,6 @@ int cliente_udp_enviar_fim(ClienteUDP *cliente);
 int cliente_udp_enviar_arquivo(ClienteUDP *cliente, const char *nome_arquivo);
 void cliente_udp_fechar(ClienteUDP *cliente);
 void cliente_udp_definir_verboso(ClienteUDP *cliente, int verboso);
-
-// Funções auxiliares
 void criar_pacote(Pacote *pacote, MessageType tipo, uint32_t num_seq, const char *dados, int tamanho_dados);
 
 #endif

@@ -18,11 +18,9 @@ int main(int argc, char *argv[]) {
     int porta = 8080;
     int modo_verboso = 0;
     double taxa_perda = 0.0;
-    
-    // Inicializar gerador de números aleatórios
     srand(time(NULL));
     
-    // Processar argumentos da linha de comando
+    // opçoes de linha de comando
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
             modo_verboso = 1;
@@ -41,7 +39,6 @@ int main(int argc, char *argv[]) {
             imprimir_uso(argv[0]);
             return EXIT_SUCCESS;
         } else {
-            // Assumir que é a porta
             porta = atoi(argv[i]);
             if (porta <= 0 || porta > 65535) {
                 fprintf(stderr, "Erro: porta inválida (%d)\n", porta);
@@ -72,7 +69,6 @@ int main(int argc, char *argv[]) {
             printf("Transmissão processada com sucesso!\n");
             logger("Transmissão completa recebida", "server.log");
             
-            // Mostrar estatísticas usando função do utils
             imprimir_estatisticas_servidor(
                 servidor.estatisticas.pacotes_recebidos,
                 servidor.estatisticas.pacotes_enviados,
@@ -81,10 +77,9 @@ int main(int argc, char *argv[]) {
                 servidor.estatisticas.pacotes_corrompidos,
                 servidor.estatisticas.pacotes_duplicados,
                 servidor.estatisticas.tempo_inicio,
-                time(NULL)  // Tempo atual como fim
+                time(NULL) 
             );
-            
-            // Reset da sequência para próxima transmissão
+    
             servidor.sequencia_esperada = 0;
         }
     }
